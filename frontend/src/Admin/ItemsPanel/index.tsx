@@ -1,21 +1,74 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Edit, Trash2, X } from "lucide-react";
-import type { Item } from "../../types";
+import type { Item, Category } from "../../types";
+import { useSelector, useDispatch } from "react-redux";
+import type { AppDispatch } from "../../store";
+import type { CategoryProps } from "../../types";
+import {
+  updateCategoryThunk,
+  getCategoriesThunk,
+} from "../../states/category/categoryThunks";
 
 const ItemsPanel = () => {
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      title: "موقع تجارة إلكترونية",
-      description: "متجر إلكتروني متكامل مع نظام دفع",
-      url: "https://example.com",
-      category: "تطوير المواقع",
-      state: "متاح",
-      price: 2500,
-      ranking: 1,
-      createdAt: "2024-01-15",
-    },
-  ]);
+  const dispatch = useDispatch<AppDispatch>();
+  const { categoryData } = useSelector(
+    (state: { category: CategoryProps }) => state?.category
+  );
+
+  // Ensure categories are loaded once on mount
+  useEffect(() => {
+    if (!categoryData || categoryData.length === 0) {
+      void dispatch(getCategoriesThunk());
+    }
+  }, [dispatch]);
+
+  // Local copy of categories for optimistic UI updates
+  const [localCategories, setLocalCategories] = useState<
+    | (Category & {
+        _id?: string;
+        items?: any[];
+        rank?: number;
+        ranking?: number;
+      })[]
+    | null
+  >(null);
+
+  // Seed localCategories once categoryData arrives (first load)
+  useEffect(() => {
+    if (categoryData && categoryData.length > 0 && localCategories === null) {
+      // shallow clone is sufficient since we replace items arrays on edit
+      setLocalCategories(
+        (categoryData as (Category & { _id?: string; items?: any[] })[]).map(
+          (c) => ({ ...c })
+        )
+      );
+    }
+  }, [categoryData, localCategories]);
+
+  // Flatten items from categories
+  const items = useMemo(() => {
+    const list: (Item & { _categoryId?: string })[] = [];
+    (localCategories ?? categoryData ?? []).forEach(
+      (cat: Category & { _id?: string; items?: any[] }) => {
+        const catId = (cat as unknown as { _id?: string })._id;
+        (cat.items ?? []).forEach((it: any) => {
+          list.push({
+            id: (it as { _id?: string })._id ?? "",
+            title: it.title,
+            description: it.description,
+            url: it.url,
+            category: cat.name,
+            state: it.state,
+            price: it.price,
+            ranking: it.rank ?? it.ranking ?? 0,
+            createdAt: it.createdAt,
+            _categoryId: catId,
+          });
+        });
+      }
+    );
+    return list;
+  }, [localCategories, categoryData]);
 
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -29,34 +82,89 @@ const ItemsPanel = () => {
     ranking: "",
   });
 
-  const categories = ["تطوير المواقع", "التطبيقات الذكية", "التصميم الجرافيكي"];
+  const categories = useMemo(() => {
+    const names = new Set<string>();
+    (localCategories ?? categoryData ?? []).forEach((c: Category) => {
+      if (c?.name) names.add(c.name);
+    });
+    return Array.from(names);
+  }, [localCategories, categoryData]);
   const states = ["متاح", "قريباً", "مؤرشف"];
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (editingItem) {
-      setItems(
-        items.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                ...formData,
-                price: parseFloat(formData.price),
-                ranking: parseInt(formData.ranking),
-              }
-            : item
-        )
-      );
-    } else {
-      const newItem = {
-        id: Date.now(),
-        ...formData,
-        price: parseFloat(formData.price),
-        ranking: parseInt(formData.ranking),
-        createdAt: new Date().toISOString().split("T")[0],
-      };
-      setItems([...items, newItem]);
+    // Determine target category to update (by name)
+    const targetCategory = (localCategories ?? categoryData ?? []).find(
+      (c: Category) => c.name === formData.category
+    ) as (Category & { _id?: string; items?: any[] }) | undefined;
+
+    if (!targetCategory || !targetCategory._id) {
+      setShowModal(false);
+      setEditingItem(null);
+      return;
     }
+
+    // Build new items array for the category
+    const categoryItems = [...((targetCategory.items as any[]) ?? [])];
+    if (editingItem) {
+      const idx = categoryItems.findIndex(
+        (it) => (it as { _id?: string })._id === editingItem.id
+      );
+      if (idx >= 0) {
+        categoryItems[idx] = {
+          ...(categoryItems[idx] ?? {}),
+          title: formData.title,
+          description: formData.description,
+          url: formData.url,
+          state: formData.state,
+          price: parseFloat(formData.price),
+          rank: parseInt(formData.ranking),
+        };
+      }
+    } else {
+      categoryItems.push({
+        title: formData.title,
+        description: formData.description,
+        url: formData.url,
+        state: formData.state,
+        price: parseFloat(formData.price),
+        rank: parseInt(formData.ranking),
+      });
+    }
+
+    // Optimistically update local categories
+    setLocalCategories((prev) => {
+      const source = (prev ?? (categoryData as any[])) as (Category & {
+        _id?: string;
+        items?: any[];
+      })[];
+      if (!source) return prev;
+      const updated = source.map((c) =>
+        (c._id ?? (c as any).id) ===
+        (targetCategory._id ?? (targetCategory as any).id)
+          ? { ...c, items: categoryItems }
+          : c
+      );
+      return updated as any;
+    });
+
+    // Persist by updating the category with new items
+    await dispatch(
+      updateCategoryThunk({
+        ...(targetCategory as unknown as { _id?: string; id?: string }),
+        name: targetCategory.name,
+        description: targetCategory.description,
+        ranking:
+          (targetCategory as unknown as { ranking?: number; rank?: number })
+            .ranking ??
+          (targetCategory as unknown as { ranking?: number; rank?: number })
+            .rank ??
+          0,
+        // attach items to category body
+        items: categoryItems,
+      } as unknown as Category)
+    ).unwrap();
+
     setShowModal(false);
     setEditingItem(null);
     setFormData({
@@ -84,8 +192,49 @@ const ItemsPanel = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    setItems(items.filter((item) => item.id !== id));
+  const handleDelete = async (id: string) => {
+    // Find the category that owns this item
+    const owningCategory = (localCategories ?? categoryData ?? []).find(
+      (cat: any) =>
+        (cat.items ?? []).some((it: any) => (it as { _id?: string })._id === id)
+    ) as (Category & { _id?: string; items?: any[] }) | undefined;
+
+    if (!owningCategory || !owningCategory._id) return;
+
+    const newItems = (owningCategory.items ?? []).filter(
+      (it: any) => (it as { _id?: string })._id !== id
+    );
+
+    // Optimistically update local categories
+    setLocalCategories((prev) => {
+      const source = (prev ?? (categoryData as any[])) as (Category & {
+        _id?: string;
+        items?: any[];
+      })[];
+      if (!source) return prev;
+      const updated = source.map((c) =>
+        (c._id ?? (c as any).id) ===
+        (owningCategory._id ?? (owningCategory as any).id)
+          ? { ...c, items: newItems }
+          : c
+      );
+      return updated as any;
+    });
+
+    await dispatch(
+      updateCategoryThunk({
+        ...(owningCategory as unknown as { _id?: string; id?: string }),
+        name: owningCategory.name,
+        description: owningCategory.description,
+        ranking:
+          (owningCategory as unknown as { ranking?: number; rank?: number })
+            .ranking ??
+          (owningCategory as unknown as { ranking?: number; rank?: number })
+            .rank ??
+          0,
+        items: newItems,
+      } as unknown as Category)
+    ).unwrap();
   };
 
   return (
@@ -139,7 +288,9 @@ const ItemsPanel = () => {
                 </div>
                 <div className="text-cyan-400 font-semibold">${item.price}</div>
                 <div className="text-gray-300">{item.ranking}</div>
-                <div className="text-gray-400 text-sm">{item.createdAt}</div>
+                <div className="text-gray-400 text-sm">
+                  {new Date(item.createdAt).toLocaleDateString()}
+                </div>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleEdit(item)}
@@ -148,7 +299,7 @@ const ItemsPanel = () => {
                     <Edit className="h-4 w-4 text-blue-400" />
                   </button>
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => void handleDelete(item.id)}
                     className="p-2 bg-red-600/20 hover:bg-red-600/30 rounded-lg transition-colors duration-300"
                   >
                     <Trash2 className="h-4 w-4 text-red-400" />

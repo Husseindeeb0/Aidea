@@ -4,31 +4,10 @@ import CategoriesPanel from "../../Admin/CategoriesPanel";
 import ItemsPanel from "../../Admin/ItemsPanel";
 import RequestsPanel from "../../Admin/RequestsPanel";
 import RequestsHistoryPanel from "../../Admin/RequestsHistoryPanel";
-import { useDispatch, useSelector } from "react-redux";
-import { getCategoriesThunk } from "../../states/category/categoryThunks";
-import type { CategoryProps } from "../../types";
 
 // Main Admin Panel Component
 const AdminPanel = () => {
-  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("categories");
-  const { categoryData } = useSelector((state: { category: CategoryProps }) => state?.category);
-
-  const fetchCategoriesData = async () => {
-    try {
-      await dispatch(getCategoriesThunk()).unwrap();
-    } catch (error) {
-      console.error("Error fetching course:", error);
-    }
-  };
-
-  useEffect(() => {
-    // Always fetch courses when component mounts if not already loaded
-    if (!categoriesData || categoriesData.length === 0) {
-      fetchCategoriesData();
-    }
-  }, [dispatch]);
-
   const tabs = [
     { id: "categories", label: "الفئات", icon: List },
     { id: "items", label: "العناصر", icon: Package },
@@ -52,17 +31,17 @@ const AdminPanel = () => {
   };
 
   return (
-    <div className="min-h-screen pt-16 bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+    <div className="min-h-screen pt-16 bg-gradient-to-br from-brand-purple to-brand-pink">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900 via-blue-900 to-indigo-900 backdrop-blur-lg bg-opacity-90 shadow-xl border-b border-white/10">
+      <div className="bg-gradient-to-r from-brand-purple to-brand-pink backdrop-blur-lg bg-opacity-90 shadow-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-r from-cyan-400 to-blue-500 p-3 rounded-xl">
+              <div className="bg-gradient-to-r from-brand-purple to-cyan-400 p-3 rounded-xl">
                 <Settings className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-brand-purple to-cyan-400 bg-clip-text text-transparent">
                   لوحة التحكم الإدارية
                 </h1>
                 <p className="text-gray-400">إدارة شاملة لجميع عناصر الموقع</p>

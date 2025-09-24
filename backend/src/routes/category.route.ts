@@ -11,8 +11,8 @@ const router = Router();
 
 router.post("/createCategory", createCategory);
 router.get("/getCategories", getCategories);
-router.get("/getCategoryById:id", getCategoryById);
-router.put("/updateCategory", updateCategory);
-router.delete("/deleteCategory:id", deleteCategory);
+router.get("/getCategoryById/:id", getCategoryById);
+router.patch("/updateCategory", updateCategory);
+router.delete("/deleteCategory/:id", deleteCategory);
 
 export default router;

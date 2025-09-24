@@ -1,184 +1,314 @@
-import {
-  Brain,
-  Lightbulb,
-  Target,
-  Users,
-  Sparkles,
-  Code,
-  Palette,
-  Database,
-  ArrowRight,
-  Star,
-} from "lucide-react";
+import { Brain, Package, Filter, Tag, DollarSign } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../store";
+import { useEffect, useMemo, useState } from "react";
+import { getCategoriesThunk } from "../../states/category/categoryThunks";
+import type { Category } from "../../types";
 import CategoriesCard from "../../components/CategoriesCard";
-import ItemsCard from "../../components/ItemsCard";
 
 const HomePage = () => {
-  const fe2atData = [
-    {
-      icon: Lightbulb,
-      title: "الأفكار الإبداعية",
-      description:
-        "منصة شاملة لتطوير وتنمية الأفكار الإبداعية باستخدام أحدث تقنيات الذكاء الاصطناعي والتفكير النقدي المبتكر.",
-      color: "bg-gradient-to-br from-yellow-400 to-orange-500",
-    },
-    {
-      icon: Target,
-      title: "الحلول المتقدمة",
-      description:
-        "نقدم حلولاً متطورة ومخصصة لمختلف التحديات التقنية والإبداعية مع التركيز على الجودة والابتكار والفعالية.",
-      color: "bg-gradient-to-br from-green-400 to-teal-500",
-    },
-    {
-      icon: Users,
-      title: "التعاون والشراكة",
-      description:
-        "بيئة تفاعلية تشجع على التعاون المثمر والشراكات الاستراتيجية لتحقيق أفضل النتائج وأعلى معايير الجودة.",
-      color: "bg-gradient-to-br from-purple-400 to-pink-500",
-    },
-  ];
+  const dispatch = useDispatch<AppDispatch>();
+  const { categoryData } = useSelector((state: RootState) => state.category);
 
-  const anasrData = [
-    {
-      icon: Code,
-      title: "التطوير التقني",
-      features: [
-        "برمجة متقدمة",
-        "تطبيقات ذكية",
-        "واجهات تفاعلية",
-        "أنظمة مدمجة",
-      ],
-      color: "bg-gradient-to-br from-blue-500 to-cyan-500",
-    },
-    {
-      icon: Palette,
-      title: "التصميم الإبداعي",
-      features: ["تصميم جرافيك", "هوية بصرية", "تجربة مستخدم", "واجهات حديثة"],
-      color: "bg-gradient-to-br from-pink-500 to-rose-500",
-    },
-    {
-      icon: Database,
-      title: "إدارة البيانات",
-      features: ["قواعد بيانات", "تحليل ذكي", "تقارير متقدمة", "أمان معلومات"],
-      color: "bg-gradient-to-br from-indigo-500 to-purple-500",
-    },
-    {
-      icon: Sparkles,
-      title: "الذكاء الاصطناعي",
-      features: ["تعلم آلي", "معالجة لغة", "رؤية حاسوبية", "تحليل ذكي"],
-      color: "bg-gradient-to-br from-emerald-500 to-teal-500",
-    },
-  ];
+  // State for filtering items by category
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showAllItems, setShowAllItems] = useState(false);
+
+  useEffect(() => {
+    if (!categoryData || categoryData.length === 0) {
+      void dispatch(getCategoriesThunk());
+    }
+  }, [dispatch]);
+
+  const categories = (categoryData ?? []) as (Category & {
+    _id?: string;
+    items?: any[];
+    rank?: number;
+    ranking?: number;
+  })[];
+
+  const stats = useMemo(() => {
+    const numCategories = categories.length;
+    const numItems = categories.reduce(
+      (sum, c) => sum + ((c.items as any[])?.length || 0),
+      0
+    );
+    const availableItems = categories.reduce((sum, c) => {
+      return (
+        sum +
+        ((c.items as any[])?.filter((it) => it.state === "متاح").length || 0)
+      );
+    }, 0);
+    const subscriptions = 0; // placeholder for now
+    return { numCategories, numItems, availableItems, subscriptions };
+  }, [categories]);
+
+  // Get all items from all categories
+  const allItems = useMemo(() => {
+    return categories.flatMap((cat) =>
+      (cat.items || []).map((item) => ({
+        ...item,
+        categoryName: cat.name,
+        categoryId: (cat as any)._id ?? cat.id,
+      }))
+    );
+  }, [categories]);
+
+  // Filter items based on selected category
+  const filteredItems = useMemo(() => {
+    if (!selectedCategoryId) return allItems;
+    return allItems.filter((item) => item.categoryId === selectedCategoryId);
+  }, [allItems, selectedCategoryId]);
+
+  const categoryLimit = 6;
+  const itemLimit = 9;
+
+  const displayedCategories = showAllCategories
+    ? categories
+    : categories.slice(0, categoryLimit);
+  const displayedItems = showAllItems
+    ? filteredItems
+    : filteredItems.slice(0, itemLimit);
+
+  const handleCategoryClick = (categoryId: string | null) => {
+    setSelectedCategoryId(categoryId);
+    setShowAllItems(false); // Reset items pagination when changing category
+
+    // Smooth scroll to items section
+    const itemsSection = document.getElementById("items");
+    if (itemsSection) {
+      itemsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const getSelectedCategoryName = () => {
+    if (!selectedCategoryId) return "جميع الفئات";
+    const category = categories.find(
+      (cat) => ((cat as any)._id ?? cat.id) === selectedCategoryId
+    );
+    return category?.name || "جميع الفئات";
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
-      {/* Hero Section */}
-      <section id="home" className="pt-16 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-brand-purple to-brand-pink">
+      {/* Header Stats Section */}
+      <section id="home" className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center pt-20 pb-16">
-            <div className="mb-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-2xl mb-6 shadow-2xl animate-pulse">
-                <Brain className="h-12 w-12 text-white" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl">
+            <div className="flex items-center gap-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-brand-purple to-cyan-400 rounded-xl shadow-2xl">
+                <Brain className="h-10 w-10 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-brand-purple to-cyan-400 bg-clip-text text-transparent">
+                  AIDEA
+                </h1>
+                <p className="text-gray-300">منصة للأفكار والحلول التقنية</p>
               </div>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-6">
-              AIDEA
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              منصة رائدة للأفكار الإبداعية والحلول التقنية المتطورة
-            </p>
-            <p className="text-lg text-gray-400 mb-12 max-w-2xl mx-auto">
-              نحول أفكارك إلى واقع رقمي مبتكر باستخدام أحدث التقنيات والأدوات
-              المتطورة
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/25 flex items-center">
-                <span className="ml-2">ابدأ الآن</span>
-                <ArrowRight className="h-5 w-5" />
-              </button>
-              <button className="border-2 border-gray-600 hover:border-purple-500 text-gray-300 hover:text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:-translate-y-1">
-                تعرف علينا أكثر
-              </button>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
+              <div className="text-center bg-gray-800/40 rounded-xl p-4 border border-gray-700/40 hover:border-cyan-400/50 transition-all duration-300">
+                <div className="text-2xl font-bold text-cyan-400">
+                  {stats.numCategories}
+                </div>
+                <div className="text-gray-400 text-sm">عدد الفئات</div>
+              </div>
+              <div className="text-center bg-gray-800/40 rounded-xl p-4 border border-gray-700/40 hover:border-cyan-400/50 transition-all duration-300">
+                <div className="text-2xl font-bold text-cyan-400">
+                  {stats.numItems}
+                </div>
+                <div className="text-gray-400 text-sm">عدد العناصر</div>
+              </div>
+              <div className="text-center bg-gray-800/40 rounded-xl p-4 border border-gray-700/40 hover:border-cyan-400/50 transition-all duration-300">
+                <div className="text-2xl font-bold text-cyan-400">
+                  {stats.availableItems}
+                </div>
+                <div className="text-gray-400 text-sm">العناصر المتاحة</div>
+              </div>
+              <div className="text-center bg-gray-800/40 rounded-xl p-4 border border-gray-700/40 hover:border-cyan-400/50 transition-all duration-300">
+                <div className="text-2xl font-bold text-cyan-400">
+                  {stats.subscriptions}
+                </div>
+                <div className="text-gray-400 text-sm">الاشتراكات</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Fe2at Section */}
-      <section id="fe2at" className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* Categories Section */}
+      <section id="categories" className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              الفئات الرئيسية
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              اكتشف مجموعتنا المتنوعة من الخدمات والحلول الإبداعية
-            </p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                الفئات
+              </h2>
+              <p className="text-gray-400">
+                اختر الفئة لعرض العناصر المتعلقة بها
+              </p>
+            </div>
+            {categories.length > categoryLimit && (
+              <button
+                onClick={() => setShowAllCategories((s) => !s)}
+                className="group flex items-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-400/30 hover:border-cyan-400/50 rounded-xl px-6 py-3 text-cyan-400 hover:text-cyan-300 font-medium transition-all duration-300"
+              >
+                <Filter className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                {showAllCategories ? "عرض أقل" : "عرض المزيد"}
+              </button>
+            )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {fe2atData.map((item, index) => (
-              <CategoriesCard
-                key={index}
-                icon={item.icon}
-                title={item.title}
-                description={item.description}
-                color={item.color}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* 3anaser Section */}
-      <section
-        id="3anaser"
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-gray-900/50 to-purple-900/30"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              عناصرنا المتطورة
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              مجموعة شاملة من الأدوات والتقنيات لتحقيق أهدافك
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {anasrData.map((item, index) => (
-              <ItemsCard
-                key={index}
-                icon={item.icon}
-                title={item.title}
-                features={item.features}
-                color={item.color}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { number: "500+", label: "مشروع مكتمل" },
-              { number: "150+", label: "عميل راضي" },
-              { number: "50+", label: "شريك تقني" },
-              { number: "24/7", label: "دعم فني" },
-            ].map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-gray-700/50 group-hover:border-cyan-400/50 transition-all duration-300">
-                  <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
-                    {stat.number}
-                  </div>
-                  <div className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
-                    {stat.label}
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* All Categories Card */}
+            <div
+              onClick={() => handleCategoryClick(null)}
+              className={`cursor-pointer transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 ${
+                selectedCategoryId === null
+                  ? "bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border-cyan-400/50 shadow-cyan-400/20 shadow-lg"
+                  : "bg-white/10 hover:bg-white/15 border-white/20"
+              } backdrop-blur-lg rounded-2xl p-6 border`}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className={`p-2 rounded-lg ${
+                    selectedCategoryId === null
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-500"
+                      : "bg-gray-700/50"
+                  }`}
+                >
+                  <Package className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-xl font-semibold text-white">
+                  جميع الفئات
                 </div>
               </div>
+              <div className="text-gray-300 mb-3">
+                عرض جميع العناصر من كافة الفئات المتاحة
+              </div>
+              <div className="flex gap-4 text-sm text-gray-400">
+                <span>العناصر: {allItems.length}</span>
+                <span>
+                  المتاحة:{" "}
+                  {allItems.filter((item) => item.state === "متاح").length}
+                </span>
+              </div>
+            </div>
+
+            {/* Category Cards */}
+            {displayedCategories.map((cat, idx) => (
+              <CategoriesCard
+                key={(cat as any)._id ?? cat.id ?? idx}
+                category={cat}
+                isSelected={selectedCategoryId === ((cat as any)._id ?? cat.id)}
+                onViewItems={() =>
+                  handleCategoryClick((cat as any)._id ?? cat.id)
+                }
+                onSubscribe={() => {
+                  // Handle subscription logic here
+                  console.log(`Subscribe to category: ${cat.name}`);
+                  // You can add your subscription logic here
+                }}
+                discountPercentage={15}
+                basePrice={99}
+              />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Items Section */}
+      <section id="items" className="py-12 px-4 sm:px-6 lg:px-8 bg-black/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                العناصر
+              </h2>
+              <div className="flex items-center gap-2 text-gray-400">
+                <Tag className="h-4 w-4" />
+                <span>الفئة المحددة: {getSelectedCategoryName()}</span>
+                <span className="text-cyan-400">
+                  ({filteredItems.length} عنصر)
+                </span>
+              </div>
+            </div>
+            {filteredItems.length > itemLimit && (
+              <button
+                onClick={() => setShowAllItems((s) => !s)}
+                className="group flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-400/30 hover:border-purple-400/50 rounded-xl px-6 py-3 text-purple-400 hover:text-purple-300 font-medium transition-all duration-300"
+              >
+                <Package className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                {showAllItems ? "عرض أقل" : "عرض المزيد"}
+              </button>
+            )}
+          </div>
+
+          {displayedItems.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="bg-gray-800/40 backdrop-blur-lg rounded-2xl p-8 border border-gray-700/40 max-w-md mx-auto">
+                <Package className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                  لا توجد عناصر
+                </h3>
+                <p className="text-gray-500">
+                  لا توجد عناصر متاحة في هذه الفئة حالياً
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedItems.map((item, idx) => (
+                <div
+                  key={item.id ?? idx}
+                  className="group bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-cyan-400/50 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-white mb-1 group-hover:text-cyan-400 transition-colors duration-300">
+                        {item.title || item.name || "عنصر غير مُسمى"}
+                      </h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                        <Tag className="h-3 w-3" />
+                        <span>{item.categoryName}</span>
+                      </div>
+                    </div>
+                    <div
+                      className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                        item.state === "متاح"
+                          ? "bg-green-500/20 text-green-400 border border-green-400/30"
+                          : "bg-red-500/20 text-red-400 border border-red-400/30"
+                      }`}
+                    >
+                      {item.state || "غير محدد"}
+                    </div>
+                  </div>
+
+                  <div className="text-gray-300 mb-4 line-clamp-3">
+                    {item.description || "لا يوجد وصف متاح لهذا العنصر"}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-700/50">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-yellow-400" />
+                      <span className="text-lg font-bold text-yellow-400">
+                        ${item.price || "0"}
+                      </span>
+                    </div>
+                    <button
+                      className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={item.state !== "متاح"}
+                    >
+                      {item.state === "متاح" ? "اشترك الآن" : "غير متاح"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -193,17 +323,6 @@ const HomePage = () => {
               <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                 AIDEA
               </span>
-            </div>
-            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              نحن هنا لتحويل أفكارك إلى واقع رقمي مبتكر ومتطور
-            </p>
-            <div className="flex justify-center space-x-6 mb-8">
-              {[1, 2, 3, 4, 5].map((_, index) => (
-                <Star
-                  key={index}
-                  className="h-5 w-5 text-yellow-400 fill-current"
-                />
-              ))}
             </div>
             <p className="text-gray-500">© 2024 AIDEA. جميع الحقوق محفوظة</p>
           </div>

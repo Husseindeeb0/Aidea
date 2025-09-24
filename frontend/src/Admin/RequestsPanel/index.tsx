@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { X, Check } from "lucide-react";
 import type { Request } from "../../types";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../store";
+import { removeRequestThunk } from "../../states/request/requestThunk";
 
 const RequestsPanel = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { userData } = useSelector((state: RootState) => state?.auth);
   const [requests, setRequests] = useState<Request[]>([
     {
-      id: 1,
+      id: "1",
       userName: "أحمد محمد",
       itemName: "موقع تجارة إلكترونية",
       userEmail: "ahmed@example.com",
@@ -13,7 +18,7 @@ const RequestsPanel = () => {
       status: "pending",
     },
     {
-      id: 2,
+      id: "2",
       userName: "سارة أحمد",
       itemName: "تطبيق موبايل",
       userEmail: "sara@example.com",
@@ -24,7 +29,7 @@ const RequestsPanel = () => {
 
   const [archivedRequests, setArchivedRequests] = useState<Request[]>([]);
 
-  const handleApprove = (request: Request) => {
+  const handleApprove = async (request: Request) => {
     const archivedRequest: Request = {
       ...request,
       status: "approved",
@@ -32,9 +37,13 @@ const RequestsPanel = () => {
     };
     setArchivedRequests([...archivedRequests, archivedRequest]);
     setRequests(requests.filter((req) => req.id !== request.id));
+    // remove from backend user.requests (assuming we know userId and requestId)
+    const userId = "REPLACE_WITH_USER_ID";
+    const requestId = request.id;
+    await dispatch(removeRequestThunk({ userId, requestId }));
   };
 
-  const handleReject = (request: Request) => {
+  const handleReject = async (request: Request) => {
     const archivedRequest: Request = {
       ...request,
       status: "rejected",
@@ -42,6 +51,9 @@ const RequestsPanel = () => {
     };
     setArchivedRequests([...archivedRequests, archivedRequest]);
     setRequests(requests.filter((req) => req.id !== request.id));
+    const userId = "REPLACE_WITH_USER_ID";
+    const requestId = request.id;
+    await dispatch(removeRequestThunk({ userId, requestId }));
   };
 
   return (
@@ -60,7 +72,7 @@ const RequestsPanel = () => {
           </div>
         </div>
         <div className="divide-y divide-gray-700/50">
-          {requests.map((request) => (
+          {(userData?.requests ?? []).map((request: Request) => (
             <div
               key={request.id}
               className="p-4 hover:bg-white/5 transition-colors duration-300"

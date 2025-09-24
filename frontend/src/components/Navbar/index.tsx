@@ -10,7 +10,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useSelector } from "react-redux";
-import type { TypedUseSelectorHook } from "react-redux";
 import type { AuthProps } from "../../types";
 
 // Navbar Component
@@ -19,14 +18,6 @@ const Navbar = () => {
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const { userData } = useSelector((state: { auth: AuthProps }) => state?.auth);
-
-  // Mock user (replace with actual Google auth data)
-  const user = {
-    name: "أحمد محمد",
-    email: "user@gmail.com",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format", // Better placeholder
-  };
 
   // This open the Google OAuth flow
   const handleLogin = () => {
@@ -82,17 +73,17 @@ const Navbar = () => {
   return (
     <nav
       dir="rtl"
-      className="bg-gradient-to-r from-purple-900 via-blue-900 to-indigo-900 backdrop-blur-lg bg-opacity-90 fixed w-full z-50 shadow-xl border-b border-white/10"
+      className="bg-gradient-to-r from-brand-purple to-brand-pink backdrop-blur-lg bg-opacity-90 fixed w-full z-50 shadow-xl border-b border-white/10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center space-x-2">
-              <div className="bg-gradient-to-r from-cyan-400 to-blue-500 p-2 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-200">
+              <div className="bg-gradient-to-r from-brand-purple to-cyan-400 p-2 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-200">
                 <Brain className="h-8 w-8 text-white" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-brand-purple to-cyan-400 bg-clip-text text-transparent">
                 AIDEA
               </span>
             </div>

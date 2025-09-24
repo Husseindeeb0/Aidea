@@ -15,6 +15,7 @@ export interface ICategory extends Document {
   name: string;
   description: string;
   rank: number;
+  price: number;
   items: IItem[];
   createdAt: Date;
 }
@@ -43,6 +44,7 @@ const CategorySchema = new Schema<ICategory>(
     name: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     rank: { type: Number, default: 0 },
+    price: { type: Number, default: 0 },
     items: [ItemSchema],
   },
   { timestamps: { createdAt: true, updatedAt: false } }

@@ -10,7 +10,7 @@ import type { Category } from "../../types";
 import { AxiosError } from "axios";
 
 export const createCategoryThunk = createAsyncThunk(
-  "/categories/createCategoryThunk",
+  "/categories/createCategory",
   async (newCategory: Category, thunkAPI) => {
     try {
       const res = await createCategory(newCategory);

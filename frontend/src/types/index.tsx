@@ -26,17 +26,17 @@ export interface CategoryProps {
   error: string | null;
 }
 
-// TODO: Change id into string when using database
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   description: string;
+  price: number;
   ranking: number;
+  createdAt?: "";
 }
 
-// TODO: Change id into string when using database
 export interface Item {
-  id: number;
+  id: string;
   title: string;
   description: string;
   url: string;
@@ -47,9 +47,8 @@ export interface Item {
   createdAt: string;
 }
 
-// TODO: Change id into string when using database
 export interface Request {
-  id: number;
+  id: string;
   userName: string;
   itemName: string;
   userEmail: string;

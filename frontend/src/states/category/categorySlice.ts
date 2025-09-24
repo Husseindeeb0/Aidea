@@ -58,8 +58,23 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(updateCategoryThunk.fulfilled, (state) => {
+      .addCase(updateCategoryThunk.fulfilled, (state, action) => {
         state.isLoading = false;
+        const updated = action.payload as unknown as {
+          _id?: string;
+          id?: string;
+        } | null;
+        if (
+          state.categoryData &&
+          Array.isArray(state.categoryData) &&
+          updated &&
+          (updated._id || (updated as any).id)
+        ) {
+          const updatedId = (updated as any)._id ?? (updated as any).id;
+          state.categoryData = state.categoryData.map((cat: any) =>
+            (cat?._id ?? cat?.id) === updatedId ? { ...cat, ...updated } : cat
+          );
+        }
       })
       .addCase(updateCategoryThunk.rejected, (state, action) => {
         state.isLoading = false;
@@ -92,7 +107,7 @@ const authSlice = createSlice({
       })
       .addCase(getCategoryByIdThunk.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload ?? "Unknown Error" ;
+        state.error = action.payload ?? "Unknown Error";
       });
   },
 });
