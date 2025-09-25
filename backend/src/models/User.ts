@@ -12,6 +12,7 @@ export interface IUser extends Document {
   email: string;
   name: string;
   avatar: string;
+  role: string;
   requests: IUserRequest[];
 }
 
@@ -21,11 +22,12 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true },
     name: { type: String, required: true },
     avatar: { type: String },
+    role: { type: String, default: "user" },
     requests: [
       new Schema<IUserRequest>(
         {
           categoryName: { type: String, required: true, trim: true },
-          itemName: { type: String, required: true, trim: true },
+          itemName: { type: String, trim: true },
         },
         { timestamps: { createdAt: true, updatedAt: false }, _id: true }
       ),

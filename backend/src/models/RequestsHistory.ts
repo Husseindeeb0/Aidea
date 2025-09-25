@@ -6,7 +6,8 @@ export interface IRequestHistory extends Document {
   categoryName: string;
   itemName: string;
   createdAt: Date;
-  processedAt: Date; // date of accept/reject
+  processedAt: Date;
+  expiredDate: Date;
   state: "accepted" | "rejected";
 }
 
@@ -17,6 +18,7 @@ const RequestHistorySchema = new Schema<IRequestHistory>(
     categoryName: { type: String, required: true, trim: true },
     itemName: { type: String, required: true, trim: true },
     processedAt: { type: Date, required: true },
+    expiredDate: { type: Date, required: true},
     state: {
       type: String,
       enum: ["accepted", "rejected"],

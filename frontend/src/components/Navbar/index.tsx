@@ -9,19 +9,27 @@ import {
   LogOut,
   ChevronDown,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { AuthProps } from "../../types";
+import { logoutThunk } from "../../states/auth/authThunks";
+import type { AppDispatch } from "../../store";
+import { loginWithGoogle } from "../../states/auth/authAPI";
 
 // Navbar Component
 const Navbar = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const [isOpen, setIsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const { userData } = useSelector((state: { auth: AuthProps }) => state?.auth);
 
   // This open the Google OAuth flow
-  const handleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+  const handleLogin = async () => {
+    loginWithGoogle();
+  };
+
+  const handleLogout = async () => {
+    await dispatch(logoutThunk());
   };
 
   // Close dropdown when clicking outside
@@ -66,10 +74,6 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
-  const handleLogout = () => {
-    console.log("تسجيل الخروج");
-  };
-
   return (
     <nav
       dir="rtl"
@@ -91,15 +95,17 @@ const Navbar = () => {
 
           {/* Desktop Links */}
           <div className="hidden md:flex items-center space-x-8">
-            {true ? (
+            {userData ? (
               <>
-                <Link
-                  to="/adminpanel"
-                  className="flex items-center text-gray-300 hover:text-cyan-400 px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:bg-white/10"
-                >
-                  <LayoutDashboard className="h-4 w-4 ml-2" />
-                  لوحة التحكم
-                </Link>
+                {userData.role === "admin" && (
+                  <Link
+                    to="/adminpanel"
+                    className="flex items-center text-gray-300 hover:text-cyan-400 px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:bg-white/10"
+                  >
+                    <LayoutDashboard className="h-4 w-4 ml-2" />
+                    لوحة التحكم
+                  </Link>
+                )}
                 <Link
                   to="/subscriptions"
                   className="flex items-center text-gray-300 hover:text-cyan-400 px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:bg-white/10"
@@ -197,14 +203,16 @@ const Navbar = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 bg-black/30 backdrop-blur-lg border-t border-white/10">
             {userData && (
               <>
-                <Link
-                  to="/adminpanel"
-                  className="flex items-center text-gray-300 hover:text-cyan-400 hover:bg-white/10 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <LayoutDashboard className="h-5 w-5 ml-3" />
-                  لوحة التحكم
-                </Link>
+                {userData.role === "admin" && (
+                  <Link
+                    to="/adminpanel"
+                    className="flex items-center text-gray-300 hover:text-cyan-400 hover:bg-white/10 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <LayoutDashboard className="h-5 w-5 ml-3" />
+                    لوحة التحكم
+                  </Link>
+                )}
                 <Link
                   to="/subscriptions"
                   className="flex items-center text-gray-300 hover:text-cyan-400 hover:bg-white/10 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200"

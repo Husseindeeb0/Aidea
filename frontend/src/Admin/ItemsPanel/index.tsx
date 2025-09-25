@@ -57,7 +57,7 @@ const ItemsPanel = () => {
             title: it.title,
             description: it.description,
             url: it.url,
-            category: cat.name,
+            categoryName: cat.name,
             state: it.state,
             price: it.price,
             ranking: it.rank ?? it.ranking ?? 0,
@@ -184,7 +184,7 @@ const ItemsPanel = () => {
       title: item.title,
       description: item.description,
       url: item.url,
-      category: item.category,
+      category: item.categoryName,
       state: item.state,
       price: item.price.toString(),
       ranking: item.ranking.toString(),
@@ -258,7 +258,6 @@ const ItemsPanel = () => {
             <div>الفئة</div>
             <div>الحالة</div>
             <div>السعر</div>
-            <div>الترتيب</div>
             <div>التاريخ</div>
             <div>الإجراءات</div>
           </div>
@@ -274,7 +273,7 @@ const ItemsPanel = () => {
                 <div className="text-gray-300 text-sm">
                   {item.description.substring(0, 30)}...
                 </div>
-                <div className="text-purple-400">{item.category}</div>
+                <div className="text-purple-400">{item.categoryName}</div>
                 <div
                   className={`text-sm font-medium ${
                     item.state === "متاح"
@@ -287,7 +286,6 @@ const ItemsPanel = () => {
                   {item.state}
                 </div>
                 <div className="text-cyan-400 font-semibold">${item.price}</div>
-                <div className="text-gray-300">{item.ranking}</div>
                 <div className="text-gray-400 text-sm">
                   {new Date(item.createdAt).toLocaleDateString()}
                 </div>

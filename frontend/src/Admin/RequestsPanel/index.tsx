@@ -1,42 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Check } from "lucide-react";
 import type { Request } from "../../types";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../store";
 import { removeRequestThunk } from "../../states/request/requestThunk";
+import { getRequestsThunk } from "../../states/request/requestThunk";
 
 const RequestsPanel = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { userData } = useSelector((state: RootState) => state?.auth);
-  const [requests, setRequests] = useState<Request[]>([
-    {
-      id: "1",
-      userName: "أحمد محمد",
-      itemName: "موقع تجارة إلكترونية",
-      userEmail: "ahmed@example.com",
-      requestDate: "2024-01-20",
-      status: "pending",
-    },
-    {
-      id: "2",
-      userName: "سارة أحمد",
-      itemName: "تطبيق موبايل",
-      userEmail: "sara@example.com",
-      requestDate: "2024-01-19",
-      status: "pending",
-    },
-  ]);
-
+  const { requests } = useSelector((state: RootState) => state?.request);
   const [archivedRequests, setArchivedRequests] = useState<Request[]>([]);
+
+  const fetchRequestsData = async () => {
+    try {
+      await dispatch(getRequestsThunk()).unwrap();
+    } catch (error) {
+      console.error("Error fetching course:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Always fetch courses when component mounts if not already loaded
+    if (!requests || requests.length === 0) {
+      fetchRequestsData();
+    }
+  }, [dispatch]);
 
   const handleApprove = async (request: Request) => {
     const archivedRequest: Request = {
       ...request,
-      status: "approved",
-      processedDate: new Date().toISOString().split("T")[0],
     };
+
     setArchivedRequests([...archivedRequests, archivedRequest]);
-    setRequests(requests.filter((req) => req.id !== request.id));
     // remove from backend user.requests (assuming we know userId and requestId)
     const userId = "REPLACE_WITH_USER_ID";
     const requestId = request.id;
@@ -46,11 +41,8 @@ const RequestsPanel = () => {
   const handleReject = async (request: Request) => {
     const archivedRequest: Request = {
       ...request,
-      status: "rejected",
-      processedDate: new Date().toISOString().split("T")[0],
     };
     setArchivedRequests([...archivedRequests, archivedRequest]);
-    setRequests(requests.filter((req) => req.id !== request.id));
     const userId = "REPLACE_WITH_USER_ID";
     const requestId = request.id;
     await dispatch(removeRequestThunk({ userId, requestId }));
@@ -66,13 +58,13 @@ const RequestsPanel = () => {
             <div>اسم المستخدم</div>
             <div>البريد الإلكتروني</div>
             <div>اسم العنصر</div>
+            <div>الفئة</div>
             <div>تاريخ الطلب</div>
-            <div>الحالة</div>
             <div>الإجراءات</div>
           </div>
         </div>
         <div className="divide-y divide-gray-700/50">
-          {(userData?.requests ?? []).map((request: Request) => (
+          {(requests ?? []).map((request: Request) => (
             <div
               key={request.id}
               className="p-4 hover:bg-white/5 transition-colors duration-300"
@@ -80,9 +72,9 @@ const RequestsPanel = () => {
               <div className="grid grid-cols-6 gap-4 items-center">
                 <div className="text-white font-medium">{request.userName}</div>
                 <div className="text-gray-300">{request.userEmail}</div>
-                <div className="text-purple-400">{request.itemName}</div>
-                <div className="text-gray-400">{request.requestDate}</div>
-                <div className="text-yellow-400 font-medium">قيد المراجعة</div>
+                <div className="text-purple-400">{request.itemName || "NA"}</div>
+                <div className="text-purple-400">{request.categoryName}</div>
+                <div className="text-gray-400">{new Date(request.createdAt).toLocaleDateString()}</div>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleApprove(request)}

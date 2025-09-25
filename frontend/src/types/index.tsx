@@ -8,10 +8,7 @@ export interface CategoriesCardProps {
 }
 
 export interface ItemsCardProps {
-  icon: LucideIcon;
-  title: string;
-  features: string[];
-  color: string;
+  item: Item;
 }
 
 export interface AuthProps {
@@ -40,7 +37,7 @@ export interface Item {
   title: string;
   description: string;
   url: string;
-  category: string;
+  categoryName: string;
   state: string;
   price: number;
   ranking: number;
@@ -48,11 +45,11 @@ export interface Item {
 }
 
 export interface Request {
+  userId: string;
   id: string;
   userName: string;
-  itemName: string;
+  itemName?: string;
+  categoryName: string;
   userEmail: string;
-  requestDate: string;
-  status: "pending" | "approved" | "rejected";
-  processedDate?: string; // only added when archived
+  createdAt: string;
 }

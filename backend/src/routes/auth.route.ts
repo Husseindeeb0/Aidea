@@ -20,10 +20,19 @@ router.get(
 
 // Logout
 router.get("/logout", logout);
-router.get("/checkAuth", checkAuth, (req, res) => {
-  res.json({
-    user: req.user, // Passport attaches user from session
-  });
+
+// Check auth status - DON'T use checkAuth middleware here
+router.get("/checkAuth", (req, res) => {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    res.json({
+      user: req.user, // Passport attaches user from session
+    });
+  } else {
+    res.status(401).json({
+      message: "Not authenticated",
+      user: null,
+    });
+  }
 });
 
 export default router;

@@ -1,10 +1,12 @@
-import { Brain, Package, Filter, Tag, DollarSign } from "lucide-react";
+import { Brain, Package, Filter, Tag } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../store";
 import { useEffect, useMemo, useState } from "react";
 import { getCategoriesThunk } from "../../states/category/categoryThunks";
 import type { Category } from "../../types";
 import CategoriesCard from "../../components/CategoriesCard";
+import { sendRequestThunk } from "../../states/request/requestThunk";
+import ItemsCard from "../../components/ItemsCard";
 
 const HomePage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -29,6 +31,14 @@ const HomePage = () => {
     rank?: number;
     ranking?: number;
   })[];
+
+  const sendRequest = async (data: {
+    userId: string;
+    categoryName: string;
+    itemName: string;
+  }) => {
+    await dispatch(sendRequestThunk(data)).unwrap();
+  };
 
   const stats = useMemo(() => {
     const numCategories = categories.length;
@@ -207,13 +217,13 @@ const HomePage = () => {
                 onViewItems={() =>
                   handleCategoryClick((cat as any)._id ?? cat.id)
                 }
-                onSubscribe={() => {
-                  // Handle subscription logic here
-                  console.log(`Subscribe to category: ${cat.name}`);
-                  // You can add your subscription logic here
+                onSubscribe={async () => {
+                  await sendRequest({
+                    userId: "", // supply from auth if needed here
+                    categoryName: (cat as any).name,
+                    itemName: "ALL",
+                  });
                 }}
-                discountPercentage={15}
-                basePrice={99}
               />
             ))}
           </div>
@@ -262,50 +272,7 @@ const HomePage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayedItems.map((item, idx) => (
-                <div
-                  key={item.id ?? idx}
-                  className="group bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-cyan-400/50 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white mb-1 group-hover:text-cyan-400 transition-colors duration-300">
-                        {item.title || item.name || "عنصر غير مُسمى"}
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                        <Tag className="h-3 w-3" />
-                        <span>{item.categoryName}</span>
-                      </div>
-                    </div>
-                    <div
-                      className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                        item.state === "متاح"
-                          ? "bg-green-500/20 text-green-400 border border-green-400/30"
-                          : "bg-red-500/20 text-red-400 border border-red-400/30"
-                      }`}
-                    >
-                      {item.state || "غير محدد"}
-                    </div>
-                  </div>
-
-                  <div className="text-gray-300 mb-4 line-clamp-3">
-                    {item.description || "لا يوجد وصف متاح لهذا العنصر"}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-700/50">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-yellow-400" />
-                      <span className="text-lg font-bold text-yellow-400">
-                        ${item.price || "0"}
-                      </span>
-                    </div>
-                    <button
-                      className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={item.state !== "متاح"}
-                    >
-                      {item.state === "متاح" ? "اشترك الآن" : "غير متاح"}
-                    </button>
-                  </div>
-                </div>
+                <ItemsCard key={item.id ?? idx} item={item} />
               ))}
             </div>
           )}

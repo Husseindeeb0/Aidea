@@ -5,10 +5,11 @@ import User from "../models/User";
 export const sendRequest = async (req: Request, res: Response) => {
   try {
     const { userId, categoryName, itemName } = req.body;
-    if (!userId || !categoryName || !itemName) {
+    console.log("Data: ", req.body)
+    if (!userId) {
       return res
         .status(400)
-        .json({ message: "userId, categoryName and itemName are required" });
+        .json({ message: "userId is required" });
     }
 
     const user = await User.findById(userId);
@@ -61,5 +62,30 @@ export const removeRequest = async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getAllUserRequests = async (_req: Request, res: Response) => {
+  try {
+    const requests = await User.aggregate([
+      { $unwind: "$requests" },
+      {
+        $project: {
+          userId: "$_id",
+          userName: "$name",
+          userEmail: "$email",
+          id: "$requests._id",
+          categoryName: "$requests.categoryName",
+          itemName: "$requests.itemName",
+          createdAt: "$requests.createdAt",
+        },
+      },
+      { $sort: { createdAt: -1 } },
+    ]);
+
+    res.status(200).json(requests);
+  } catch (error: any) {
+    console.error("Error fetching requests:", error);
+    res.status(500).json({ message: "Failed to fetch requests", error: error.message });
   }
 };

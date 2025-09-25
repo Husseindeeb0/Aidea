@@ -1,10 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { sendRequestAPI, removeRequestAPI } from "./requestAPI";
+import { sendRequestAPI, removeRequestAPI, getRequestsAPI } from "./requestAPI";
 
 export const sendRequestThunk = createAsyncThunk(
   "/requests/send",
   async (
-    data: { userId: string; categoryName: string; itemName: string },
+    data: { userId: string; categoryName: string; itemName?: string },
     thunkAPI
   ) => {
     try {
@@ -13,6 +13,20 @@ export const sendRequestThunk = createAsyncThunk(
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error?.response?.data?.message || "Failed to send request"
+      );
+    }
+  }
+);
+
+export const getRequestsThunk = createAsyncThunk(
+  "/requests/getRequests",
+  async (_, thunkAPI) => {
+    try {
+      const res = await getRequestsAPI();
+      return res.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error?.response?.data?.message || "Failed to get requests"
       );
     }
   }
