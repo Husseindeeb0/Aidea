@@ -132,12 +132,7 @@ const HomePage = () => {
                 </div>
                 <div className="text-gray-400 text-sm">العناصر المتاحة</div>
               </div>
-              <div className="text-center bg-gray-800/40 rounded-xl p-4 border border-gray-700/40 hover:border-cyan-400/50 transition-all duration-300">
-                <div className="text-2xl font-bold text-cyan-400">
-                  {stats.subscriptions}
-                </div>
-                <div className="text-gray-400 text-sm">الاشتراكات</div>
-              </div>
+
             </div>
           </div>
         </div>
