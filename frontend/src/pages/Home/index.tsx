@@ -217,13 +217,6 @@ const HomePage = () => {
                 onViewItems={() =>
                   handleCategoryClick((cat as any)._id ?? cat.id)
                 }
-                onSubscribe={async () => {
-                  await sendRequest({
-                    userId: "", // supply from auth if needed here
-                    categoryName: (cat as any).name,
-                    itemName: "ALL",
-                  });
-                }}
               />
             ))}
           </div>

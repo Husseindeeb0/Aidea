@@ -29,6 +29,7 @@ export interface Category {
   description: string;
   price: number;
   ranking: number;
+  items?: Item[];
   createdAt?: "";
 }
 
@@ -52,4 +53,28 @@ export interface Request {
   categoryName: string;
   userEmail: string;
   createdAt: string;
+}
+
+export interface RequestHistory {
+  userId: string;
+  id: string;
+  userName: string;
+  itemName?: string;
+  categoryName: string;
+  userEmail: string;
+  processedAt:Date;
+  expiredDate: Date;
+  state: String;
+}
+
+export interface SubscriptionItem {
+  _id: string;
+  title: string;
+  description: string;
+  url?: string;
+  state: "متاح" | "قريباً" | "مؤرشف";
+  price: number;
+  createdAt: string;
+  categoryName: string;
+  expiredDate: string;
 }

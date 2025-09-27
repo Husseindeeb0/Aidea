@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 import { googleCallback, logout } from "../controllers/auth.controller";
-import { checkAuth } from "../middleware";
+import User from "../models/User";
 
 const router = express.Router();
 
@@ -21,17 +21,20 @@ router.get(
 // Logout
 router.get("/logout", logout);
 
-// Check auth status - DON'T use checkAuth middleware here
-router.get("/checkAuth", (req, res) => {
+router.get("/checkAuth", async (req, res) => {
   if (req.isAuthenticated && req.isAuthenticated()) {
-    res.json({
-      user: req.user, // Passport attaches user from session
-    });
+    try {
+      const user = await User.findById((req.user as any)._id)
+        .populate("allowedCategories.categoryId")
+        .populate("allowedItems.itemId");
+
+      res.json({ user });
+    } catch (error) {
+      console.error("Error populating user:", error);
+      res.status(500).json({ message: "Failed to fetch user data" });
+    }
   } else {
-    res.status(401).json({
-      message: "Not authenticated",
-      user: null,
-    });
+    res.status(401).json({ message: "Not authenticated", user: null });
   }
 });
 

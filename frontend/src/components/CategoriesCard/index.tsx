@@ -23,7 +23,6 @@ const CategoriesCard = ({
   category,
   isSelected,
   onViewItems,
-  onSubscribe,
 }: CategoriesCardProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const { userData } = useSelector((state: RootState) => state.auth);
@@ -31,13 +30,32 @@ const CategoriesCard = ({
   const itemsCount = (category.items as any[])?.length || 0;
   const availableItems =
     (category.items as any[])?.filter((it) => it.state === "متاح").length || 0;
-
+  let requestId: string;
   // auto-hide notice after 6s
   useEffect(() => {
     if (!showNotice) return;
-    const t = setTimeout(() => setShowNotice(false), 6000);
+    const t = setTimeout(() => setShowNotice(false), 60000);
     return () => clearTimeout(t);
   }, [showNotice]);
+
+  const sendRequest = async (data: {
+    userId: string;
+    categoryName: string;
+  }) => {
+    await dispatch(sendRequestThunk(data)).unwrap();
+  };
+
+  const checkRequestedCategory = (categoryName: string) => {
+    let found = false;
+    for (let i = 0; i < (userData?.requests?.length || 0); i++) {
+      if (userData.requests[i].categoryName === categoryName) {
+        requestId = userData.requests[i]._id;
+        found = true;
+        break;
+      }
+    }
+    return found;
+  };
 
   return (
     <div
@@ -113,34 +131,40 @@ const CategoriesCard = ({
               <span>استعراض عناصر الفئة</span>
             </div>
           </button>
-          <button
-            onClick={async () => {
-              if (userData?._id) {
-                console.log(userData)
-                void (await dispatch(
-                  sendRequestThunk({
+          {userData && !checkRequestedCategory(category.name) ? (
+            <button
+              onClick={async () => {
+                if (userData?._id) {
+                  await sendRequest({
                     userId: userData._id,
                     categoryName: category.name,
-                  })
-                ));
-                onSubscribe && onSubscribe();
-                setShowNotice(true);
-              } else {
-                loginWithGoogle();
-              }
-            }}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 group/btn"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <CreditCard className="h-4 w-4 group-hover/btn:scale-110 transition-transform duration-300" />
-              <span>
-                اشتراك الفئة
-                {typeof category.price === "number"
-                  ? ` $${category.price}`
-                  : ""}
-              </span>
-            </div>
-          </button>
+                  });
+                  setShowNotice(true);
+                } else {
+                  loginWithGoogle();
+                }
+              }}
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 group/btn"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <CreditCard className="h-4 w-4 group-hover/btn:scale-110 transition-transform duration-300" />
+                <span>
+                  اشتراك الفئة
+                  {typeof category.price === "number"
+                    ? ` $${category.price}`
+                    : ""}
+                </span>
+              </div>
+            </button>
+          ) : (
+            userData && (
+              <div className="w-full bg-gradient-to-r from-red-500/30 to-pink-500/30 hover:from-red-600 hover:to-pink-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 focus:outline-none focus:ring-2 focus:ring-red-400/50 group/btn">
+                <div className="flex items-center justify-center gap-2">
+                  <span>انتظار القبول</span>
+                </div>
+              </div>
+            )
+          )}
         </div>
 
         {/* Inline notice after sending request */}

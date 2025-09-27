@@ -1,9 +1,6 @@
 import { Request, Response } from "express";
 
 export const googleCallback = (req: Request, res: Response) => {
-  // req.user is the saved MongoDB user
-  console.log("Logged in user:", req.user);
-
   res.redirect("http://localhost:5173/");
 };
 

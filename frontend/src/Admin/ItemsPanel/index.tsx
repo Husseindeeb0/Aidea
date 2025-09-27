@@ -11,7 +11,7 @@ import {
 
 const ItemsPanel = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { categoryData } = useSelector(
+  const { categoryData, isLoading } = useSelector(
     (state: { category: CategoryProps }) => state?.category
   );
 
@@ -237,6 +237,12 @@ const ItemsPanel = () => {
     ).unwrap();
   };
 
+  if (isLoading) {
+    return (
+      <div className="animate-spin rounded-full  border-4 w-12 h-12 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -252,30 +258,35 @@ const ItemsPanel = () => {
 
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20">
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 p-4">
-          <div className="grid grid-cols-8 gap-4 text-sm font-semibold text-gray-200">
-            <div>العنوان</div>
-            <div>الوصف</div>
-            <div>الفئة</div>
-            <div>الحالة</div>
-            <div>السعر</div>
-            <div>التاريخ</div>
-            <div>الإجراءات</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 text-sm font-semibold text-gray-200 w-full">
+            <div className="min-w-0">العنوان</div>
+            <div className="min-w-0">الوصف</div>
+            <div className="min-w-0">الفئة</div>
+            <div className="min-w-0">الحالة</div>
+            <div className="min-w-0">السعر</div>
+            <div className="min-w-0">التاريخ</div>
+            <div className="min-w-0">الإجراءات</div>
           </div>
         </div>
+
         <div className="divide-y divide-gray-700/50">
           {items.map((item) => (
             <div
               key={item.id}
               className="p-4 hover:bg-white/5 transition-colors duration-300"
             >
-              <div className="grid grid-cols-8 gap-4 items-center">
-                <div className="text-white font-medium">{item.title}</div>
-                <div className="text-gray-300 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 items-center w-full">
+                <div className="text-white font-medium min-w-0 truncate">
+                  {item.title}
+                </div>
+                <div className="text-gray-300 min-w-0 truncate">
                   {item.description.substring(0, 30)}...
                 </div>
-                <div className="text-purple-400">{item.categoryName}</div>
+                <div className="text-purple-400 min-w-0 truncate">
+                  {item.categoryName}
+                </div>
                 <div
-                  className={`text-sm font-medium ${
+                  className={`text-sm font-medium min-w-0 ${
                     item.state === "متاح"
                       ? "text-green-400"
                       : item.state === "قريباً"
@@ -285,11 +296,13 @@ const ItemsPanel = () => {
                 >
                   {item.state}
                 </div>
-                <div className="text-cyan-400 font-semibold">${item.price}</div>
-                <div className="text-gray-400 text-sm">
+                <div className="text-cyan-400 font-semibold min-w-0">
+                  ${item.price}
+                </div>
+                <div className="text-gray-400 text-sm min-w-0">
                   {new Date(item.createdAt).toLocaleDateString()}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 min-w-0">
                   <button
                     onClick={() => handleEdit(item)}
                     className="p-2 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg transition-colors duration-300"

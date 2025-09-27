@@ -13,7 +13,7 @@ import type { AppDispatch } from "../../store";
 
 const CategoriesPanel = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { categoryData } = useSelector(
+  const { categoryData, isLoading } = useSelector(
     (state: { category: CategoryProps }) => state?.category
   );
   const [showModal, setShowModal] = useState(false);
@@ -102,6 +102,12 @@ const CategoriesPanel = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="animate-spin rounded-full  border-4 w-12 h-12 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -117,14 +123,15 @@ const CategoriesPanel = () => {
 
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20">
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 p-4">
-          <div className="grid grid-cols-6 gap-4 text-sm font-semibold text-gray-200">
-            <div>الاسم</div>
-            <div className="col-span-2">الوصف</div>
-            <div>السعر</div>
-            <div>تاريخ الإنشاء</div>
-            <div>الإجراءات</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 text-sm font-semibold text-gray-200 w-full">
+            <div className="min-w-0">الاسم</div>
+            <div className="col-span-1 sm:col-span-2 min-w-0">الوصف</div>
+            <div className="min-w-0">السعر</div>
+            <div className="min-w-0">تاريخ الإنشاء</div>
+            <div className="min-w-0">الإجراءات</div>
           </div>
         </div>
+
         <div className="divide-y divide-gray-700/50">
           {((categoryData ?? []) as (Category & { _id?: string })[]).map(
             (category: Category & { _id?: string }, index) => (
@@ -132,18 +139,20 @@ const CategoriesPanel = () => {
                 key={category.id || index}
                 className="p-4 hover:bg-white/5 transition-colors duration-300"
               >
-                <div className="grid grid-cols-6 gap-4 items-center">
-                  <div className="text-white font-medium">{category.name}</div>
-                  <div className="col-span-2 text-gray-300">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 items-center w-full">
+                  <div className="text-white font-medium min-w-0 truncate">
+                    {category.name}
+                  </div>
+                  <div className="col-span-1 sm:col-span-2 text-gray-300 min-w-0 truncate">
                     {category.description}
                   </div>
-                  <div className="text-cyan-400 font-semibold">
+                  <div className="text-cyan-400 font-semibold min-w-0">
                     {category.price}
                   </div>
-                  <div className="text-gray-400">
+                  <div className="text-gray-400 text-sm min-w-0">
                     {formatDate(category.createdAt as unknown as string)}
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 min-w-0">
                     <button
                       onClick={() => handleEdit(category)}
                       className="p-2 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg transition-colors duration-300"
@@ -183,7 +192,12 @@ const CategoriesPanel = () => {
                 onClick={() => {
                   setShowModal(false);
                   setEditingCategory(null);
-                  setFormData({ name: "", description: "", ranking: 0, price: 0 });
+                  setFormData({
+                    name: "",
+                    description: "",
+                    ranking: 0,
+                    price: 0,
+                  });
                 }}
                 className="text-gray-400 hover:text-white"
               >
@@ -255,7 +269,12 @@ const CategoriesPanel = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingCategory(null);
-                    setFormData({ name: "", description: "", ranking: 0, price: 0 });
+                    setFormData({
+                      name: "",
+                      description: "",
+                      ranking: 0,
+                      price: 0,
+                    });
                   }}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-semibold transition-all duration-300"
                 >

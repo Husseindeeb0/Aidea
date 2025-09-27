@@ -1,5 +1,16 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IAllowedCategory {
+  categoryId: mongoose.Types.ObjectId | string;
+  expiredDate: Date;
+}
+
+export interface IAllowedItem {
+  itemId: mongoose.Types.ObjectId | string;
+  categoryId?: mongoose.Types.ObjectId | string;
+  expiredDate: Date;
+}
+
 export interface IUserRequest {
   _id?: mongoose.Types.ObjectId;
   categoryName: string;
@@ -14,7 +25,29 @@ export interface IUser extends Document {
   avatar: string;
   role: string;
   requests: IUserRequest[];
+  allowedCategories?: IAllowedCategory[];
+  allowedItems?: IAllowedItem[];
 }
+
+const allowedCategorySchema = new Schema(
+  {
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    expiredDate: { type: Date },
+  },
+  { _id: false }
+);
+
+const allowedItemSchema = new Schema(
+  {
+    categoryId: { type: Schema.Types.ObjectId, ref: "Category" },
+    itemId: { type: Schema.Types.ObjectId, ref: "Item" },
+    expiredDate: { type: Date },
+  },
+  { _id: false }
+);
 
 const userSchema = new Schema<IUser>(
   {
@@ -32,6 +65,8 @@ const userSchema = new Schema<IUser>(
         { timestamps: { createdAt: true, updatedAt: false }, _id: true }
       ),
     ],
+    allowedCategories: [allowedCategorySchema],
+    allowedItems: [allowedItemSchema],
   },
   { timestamps: true }
 );

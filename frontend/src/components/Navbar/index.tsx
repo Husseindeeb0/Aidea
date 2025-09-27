@@ -83,14 +83,14 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center space-x-2">
+            <Link to={"/"} className="flex-shrink-0 flex items-center space-x-2">
               <div className="bg-gradient-to-r from-brand-purple to-cyan-400 p-2 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-200">
                 <Brain className="h-8 w-8 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-brand-purple to-cyan-400 bg-clip-text text-transparent">
                 AIDEA
               </span>
-            </div>
+            </Link>
           </div>
 
           {/* Desktop Links */}

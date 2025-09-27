@@ -1,21 +1,41 @@
-import { Tag, DollarSign } from "lucide-react";
+import { Tag, DollarSign, CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { ItemsCardProps } from "../../types";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../store";
-import { sendRequestThunk } from "../../states/request/requestThunk";
+import {
+  sendRequestThunk,
+  removeRequestThunk,
+} from "../../states/request/requestThunk";
 import { loginWithGoogle } from "../../states/auth/authAPI";
 
 const ItemsCard = ({ item }: ItemsCardProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const { userData } = useSelector((state: RootState) => state.auth);
   const [showNotice, setShowNotice] = useState(false);
+  let requestId: string;
 
   useEffect(() => {
     if (!showNotice) return;
     const t = setTimeout(() => setShowNotice(false), 6000);
     return () => clearTimeout(t);
   }, [showNotice]);
+
+  // ✅ Check if this item already has a request
+  const checkRequestedItem = (categoryName: string, itemName: string) => {
+    let found = false;
+    for (let i = 0; i < (userData?.requests?.length || 0); i++) {
+      const req = userData.requests[i];
+      if (req.categoryName === categoryName && req.itemName === itemName) {
+        requestId = req._id;
+        found = true;
+        break;
+      }
+    }
+    return found;
+  };
+
+  const isRequested = checkRequestedItem(item.categoryName, item.title);
 
   return (
     <div className="group bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-cyan-400/50 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10">
@@ -43,26 +63,40 @@ const ItemsCard = ({ item }: ItemsCardProps) => {
             {item.price}
           </span>
         </div>
-        <button
-          className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
-          onClick={async () => {
-            if (userData?._id) {
-              console.log(userData);
-              void await dispatch(
-                sendRequestThunk({
-                  userId: userData._id as string,
-                  categoryName: item.categoryName,
-                  itemName: item.title,
-                })
-              );
-              setShowNotice(true);
-            } else {
-              loginWithGoogle();
-            }
-          }}
-        >
-          اشترك الآن
-        </button>
+
+        {/* ✅ Conditional button */}
+        {userData && !isRequested ? (
+          <button
+            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+            onClick={async () => {
+              if (userData?._id) {
+                await dispatch(
+                  sendRequestThunk({
+                    userId: userData._id as string,
+                    categoryName: item.categoryName,
+                    itemName: item.title,
+                  })
+                );
+                setShowNotice(true);
+              } else {
+                loginWithGoogle();
+              }
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span>اشترك الآن</span>
+            </div>
+          </button>
+        ) : (
+          userData && (
+            <div className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400/50">
+              <div className="flex items-center gap-2">
+                <span>انتظار القبول</span>
+              </div>
+            </div>
+          )
+        )}
       </div>
 
       {showNotice && (
