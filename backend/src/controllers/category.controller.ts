@@ -3,14 +3,14 @@ import { Category } from "../models/Category";
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { name, description, rank } = req.body;
+    const { name, description, rank, price } = req.body;
     if (!name || !description || !rank) {
       return res
         .status(400)
         .json({ message: "Name, description and rank are required" });
     }
 
-    const category = new Category({ name, description, rank });
+    const category = new Category({ name, description, rank, price });
     await category.save();
 
     res.status(201).json(category);
@@ -30,26 +30,11 @@ export const getCategories = async (_req: Request, res: Response) => {
   }
 };
 
-export const getCategoryById = async (req: Request, res: Response) => {
-  try {
-    const category = await Category.findById(req.params.id);
-
-    if (!category) {
-      return res.status(404).json({ message: "Category not found" });
-    }
-
-    res.json(category);
-  } catch (error: any) {
-    console.error("Error fetching category:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-    const { name, description, rank, items, _id } = req.body;
+    const { name, description, rank, items, price, _id } = req.body;
 
-    const update: Record<string, unknown> = { name, description, rank };
+    const update: Record<string, unknown> = { name, description, rank, price };
     if (Array.isArray(items)) {
       update.items = items;
     }

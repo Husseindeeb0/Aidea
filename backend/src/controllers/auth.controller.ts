@@ -1,7 +1,16 @@
 import { Request, Response } from "express";
+import dotenv from "dotenv"
+
+dotenv.config();
 
 export const googleCallback = (req: Request, res: Response) => {
-  res.redirect("http://localhost:5173/");
+  const URI = process.env.FRONTEND_URI;
+  if (!URI) {
+    return res
+      .status(500)
+      .json({ message: "Server misconfiguration: missing frontend URI" });
+  }
+  res.redirect(`${URI}/`);
 };
 
 export const logout = (req: Request, res: Response) => {

@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
 import AdminPanel from "./pages/AdminPanel";
@@ -12,17 +12,19 @@ import ProtectedRoute from "./components/ProtectedRoutes";
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const { userData } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { userData } = useSelector((state: RootState) => state.auth);
 
-  // Check if user is authenticated when app loads
   useEffect(() => {
+    // first, check authentication on mount
     dispatch(checkAuthThunk());
-    if ( userData ) {
-      dispatch(checkEpirationThunk());
-    }
   }, [dispatch]);
+
+  useEffect(() => {
+    // when userData changes (and is valid), check expiration
+    if (userData?._id) {
+      dispatch(checkEpirationThunk(userData._id));
+    }
+  }, [dispatch, userData?._id]);
 
   return (
     <BrowserRouter>

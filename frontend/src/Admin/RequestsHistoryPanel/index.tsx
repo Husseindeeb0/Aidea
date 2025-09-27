@@ -85,7 +85,9 @@ const RequestsHistoryPanel = () => {
           </div>
         </div>
       ) : (
-        <div className="p-8 text-center text-gray-400">لا توجد طلبات سابقة</div>
+        <div className="p-8 text-center text-2xl text-gray-400">
+          لا توجد طلبات سابقة
+        </div>
       )}
     </div>
   );

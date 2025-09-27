@@ -8,10 +8,10 @@ export const sendRequestAPI = (data: {
 export const getRequestsAPI = () => axiosInstance.get("/requests/getRequests");
 export const getRequestHistoryAPI = () =>
   axiosInstance.get("/requests/getAllRequestHistory");
-export const checkExpirationAPI = () =>
-  axiosInstance.get("/requests/checkExpiration");
-export const getUserSubscriptionsAPI = () =>
-  axiosInstance.get("/requests/getUserSubscriptions");
+export const checkExpirationAPI = (userId: string) =>
+  axiosInstance.get(`/requests/checkExpiration/${userId}`);
+export const getUserSubscriptionsAPI = (userId: string) =>
+  axiosInstance.get(`/requests/getUserSubscriptions/${userId}`);
 export const allowRequestAPI = (data: { userId: string; id: string }) =>
   axiosInstance.post("/requests/allowRequest", data);
 export const rejectRequestAPI = (data: { userId: string; id: string }) =>

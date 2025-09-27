@@ -27,23 +27,18 @@ const CategoriesCard = ({
   const dispatch = useDispatch<AppDispatch>();
   const { userData } = useSelector((state: RootState) => state.auth);
   const [showNotice, setShowNotice] = useState(false);
+  const [localIsRequested, setLocalIsRequested] = useState(false); // Local state to track request status
   const itemsCount = (category.items as any[])?.length || 0;
   const availableItems =
     (category.items as any[])?.filter((it) => it.state === "متاح").length || 0;
   let requestId: string;
-  // auto-hide notice after 6s
+
+  // auto-hide notice after 60s
   useEffect(() => {
     if (!showNotice) return;
     const t = setTimeout(() => setShowNotice(false), 60000);
     return () => clearTimeout(t);
   }, [showNotice]);
-
-  const sendRequest = async (data: {
-    userId: string;
-    categoryName: string;
-  }) => {
-    await dispatch(sendRequestThunk(data)).unwrap();
-  };
 
   const checkRequestedCategory = (categoryName: string) => {
     let found = false;
@@ -55,6 +50,42 @@ const CategoriesCard = ({
       }
     }
     return found;
+  };
+
+  // Check both Redux state and local state
+  const isRequestedFromRedux = checkRequestedCategory(category.name);
+  const isRequested = isRequestedFromRedux || localIsRequested;
+
+  // Update local state when Redux state changes
+  useEffect(() => {
+    if (isRequestedFromRedux) {
+      setLocalIsRequested(true);
+    }
+  }, [isRequestedFromRedux]);
+
+  // Handle subscription click
+  const handleSubscribe = async () => {
+    if (userData?._id) {
+      try {
+        // Set local state immediately to prevent double-clicking
+        setLocalIsRequested(true);
+
+        await dispatch(
+          sendRequestThunk({
+            userId: userData._id,
+            categoryName: category.name,
+          })
+        ).unwrap(); // Use unwrap to handle success/failure properly
+
+        setShowNotice(true);
+      } catch (error) {
+        // If request fails, revert local state
+        setLocalIsRequested(false);
+        console.error("Failed to send category request:", error);
+      }
+    } else {
+      loginWithGoogle();
+    }
   };
 
   return (
@@ -131,39 +162,39 @@ const CategoriesCard = ({
               <span>استعراض عناصر الفئة</span>
             </div>
           </button>
-          {userData && !checkRequestedCategory(category.name) ? (
-            <button
-              onClick={async () => {
-                if (userData?._id) {
-                  await sendRequest({
-                    userId: userData._id,
-                    categoryName: category.name,
-                  });
-                  setShowNotice(true);
-                } else {
-                  loginWithGoogle();
-                }
-              }}
-              className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 group/btn"
-            >
-              <div className="flex items-center justify-center gap-2">
-                <CreditCard className="h-4 w-4 group-hover/btn:scale-110 transition-transform duration-300" />
-                <span>
-                  اشتراك الفئة
-                  {typeof category.price === "number"
-                    ? ` $${category.price}`
-                    : ""}
-                </span>
-              </div>
-            </button>
-          ) : (
-            userData && (
-              <div className="w-full bg-gradient-to-r from-red-500/30 to-pink-500/30 hover:from-red-600 hover:to-pink-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 focus:outline-none focus:ring-2 focus:ring-red-400/50 group/btn">
+
+          {userData ? (
+            !isRequested ? (
+              <button
+                onClick={handleSubscribe}
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 group/btn"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <CreditCard className="h-4 w-4 group-hover/btn:scale-110 transition-transform duration-300" />
+                  <span>
+                    اشتراك الفئة
+                    {typeof category.price === "number"
+                      ? ` $${category.price}`
+                      : ""}
+                  </span>
+                </div>
+              </button>
+            ) : (
+              <div className="w-full bg-gradient-to-r from-red-500/30 to-pink-500/30 text-white font-semibold py-3 px-4 rounded-xl">
                 <div className="flex items-center justify-center gap-2">
                   <span>انتظار القبول</span>
                 </div>
               </div>
             )
+          ) : (
+            <button
+              onClick={() => loginWithGoogle()}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 focus:outline-none focus:ring-2 focus:ring-purple-400/50 group/btn"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <span>تسجيل الدخول للاشتراك</span>
+              </div>
+            </button>
           )}
         </div>
 
@@ -182,8 +213,6 @@ const CategoriesCard = ({
           </div>
         )}
       </div>
-
-      {/* Minimal background only */}
     </div>
   );
 };

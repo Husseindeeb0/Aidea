@@ -22,7 +22,7 @@ const CategoriesPanel = () => {
     name: "",
     description: "",
     price: 0,
-    ranking: 0,
+    rank: 0,
   });
 
   const formatDate = (value?: string) => {
@@ -43,7 +43,6 @@ const CategoriesPanel = () => {
       console.error("Error fetching course:", error);
     }
   };
-
   useEffect(() => {
     // Always fetch courses when component mounts if not already loaded
     if (!categoryData || categoryData.length === 0) {
@@ -55,16 +54,18 @@ const CategoriesPanel = () => {
     e.preventDefault();
     try {
       if (editingCategory) {
+        console.log("editing category:", editingCategory);
         await dispatch(
           updateCategoryThunk({
-            // send identifier (supports either _id or id downstream)
             ...(editingCategory as unknown as { _id?: string; id?: string }),
             name: formData.name,
             description: formData.description,
-            ranking: formData.ranking,
+            rank: formData.rank,
+            price: formData.price,
           } as unknown as Category)
         ).unwrap();
       } else {
+        console.log(formData);
         await dispatch(
           createCategoryThunk(formData as unknown as Category)
         ).unwrap();
@@ -75,7 +76,7 @@ const CategoriesPanel = () => {
     }
     setShowModal(false);
     setEditingCategory(null);
-    setFormData({ name: "", description: "", ranking: 0, price: 0 });
+    setFormData({ name: "", description: "", rank: 0, price: 0 });
   };
 
   const handleEdit = (category: Category) => {
@@ -84,7 +85,7 @@ const CategoriesPanel = () => {
       name: category.name,
       description: category.description,
       price: category.price,
-      ranking: Number(
+      rank: Number(
         (category as unknown as { ranking?: number; rank?: number }).ranking ??
           (category as unknown as { ranking?: number; rank?: number }).rank ??
           0
@@ -195,7 +196,7 @@ const CategoriesPanel = () => {
                   setFormData({
                     name: "",
                     description: "",
-                    ranking: 0,
+                    rank: 0,
                     price: 0,
                   });
                 }}
@@ -234,6 +235,7 @@ const CategoriesPanel = () => {
                 <input
                   type="number"
                   step="0.01"
+                  min="0"
                   value={formData.price}
                   onChange={(e) =>
                     setFormData({ ...formData, price: Number(e.target.value) })
@@ -246,11 +248,12 @@ const CategoriesPanel = () => {
                 <label className="block text-gray-300 mb-2">الترتيب</label>
                 <input
                   type="number"
-                  value={formData.ranking}
+                  value={formData.rank}
+                  min="0"
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      ranking: Number(e.target.value),
+                      rank: Number(e.target.value),
                     })
                   }
                   className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
@@ -272,7 +275,7 @@ const CategoriesPanel = () => {
                     setFormData({
                       name: "",
                       description: "",
-                      ranking: 0,
+                      rank: 0,
                       price: 0,
                     });
                   }}

@@ -8,7 +8,10 @@ const router = express.Router();
 // Start Google OAuth flow
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    prompt: "select_account",
+  })
 );
 
 // Google callback

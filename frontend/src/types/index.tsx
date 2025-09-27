@@ -28,7 +28,7 @@ export interface Category {
   name: string;
   description: string;
   price: number;
-  ranking: number;
+  rank: number;
   items?: Item[];
   createdAt?: "";
 }
@@ -41,7 +41,7 @@ export interface Item {
   categoryName: string;
   state: string;
   price: number;
-  ranking: number;
+  rank: number;
   createdAt: string;
 }
 
@@ -62,7 +62,7 @@ export interface RequestHistory {
   itemName?: string;
   categoryName: string;
   userEmail: string;
-  processedAt:Date;
+  processedAt: Date;
   expiredDate: Date;
   state: String;
 }
@@ -77,4 +77,5 @@ export interface SubscriptionItem {
   createdAt: string;
   categoryName: string;
   expiredDate: string;
+  source?: "allowedItem" | "allowedCategory";
 }

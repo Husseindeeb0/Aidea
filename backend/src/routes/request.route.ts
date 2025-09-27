@@ -15,10 +15,10 @@ const router = Router();
 router.post("/send", sendRequest);
 router.get("/getRequests", getAllUserRequests);
 router.get("/getAllRequestHistory", getAllRequestHistory);
-router.get("/checkExpiration", checkExpiration);
+router.get("/checkExpiration/:id", checkExpiration);
 router.post("/allowRequest", allowRequest);
 router.post("/rejectRequest", rejectRequest);
-router.get("/getUserSubscriptions", getUserSubscriptions);
+router.get("/getUserSubscriptions/:id", getUserSubscriptions);
 router.delete("/remove/:userId/:requestId", removeRequest);
 
 export default router;

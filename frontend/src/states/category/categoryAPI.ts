@@ -5,7 +5,8 @@ export const createCategory = (newCategory: Category) =>
   axiosInstance.post("/categories/createCategory", {
     name: newCategory.name,
     description: newCategory.description,
-    rank: newCategory.ranking,
+    rank: newCategory.rank,
+    price: newCategory.price,
   });
 export const updateCategory = (updatedCategory: Category) =>
   axiosInstance.patch("/categories/updateCategory", {
@@ -14,7 +15,9 @@ export const updateCategory = (updatedCategory: Category) =>
       (updatedCategory as unknown as { id?: string }).id,
     name: updatedCategory.name,
     description: updatedCategory.description,
-    rank: updatedCategory.ranking,
+    rank: updatedCategory.rank,
+    price: updatedCategory.price,
+
     // Forward nested items if present (used by ItemsPanel updates)
     ...((updatedCategory as unknown as { items?: unknown[] }).items
       ? { items: (updatedCategory as unknown as { items?: unknown[] }).items }

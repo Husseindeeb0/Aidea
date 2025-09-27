@@ -289,7 +289,7 @@ export const getAllRequestHistory = async (_req: Request, res: Response) => {
 
 export const checkExpiration = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.body;
+    const userId = req.params.id;
 
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
@@ -329,35 +329,22 @@ export const checkExpiration = async (req: Request, res: Response) => {
 
 export const getUserSubscriptions = async (req: Request, res: Response) => {
   try {
-    // Handle different ways user ID might be stored
-    let userId: string;
-    
-    // Type assertion to access user property safely
-    const userFromAuth = (req as any).user;
-    
-    if (userFromAuth?.id) {
-      userId = userFromAuth.id;
-    } else if (userFromAuth?._id) {
-      userId = userFromAuth._id.toString();
-    } else if (req.params.id) {
-      userId = req.params.id;
-    } else if (req.query.userId) {
-      userId = req.query.userId as string;
-    } else {
-      return res.status(400).json({ 
+    // Get user ID from URL parameters
+    const userId = req.params.id;
+
+    if (!userId) {
+      return res.status(400).json({
         success: false,
-        message: "User ID not found in request" 
+        message: "User ID is required",
       });
     }
 
-    console.log(`Fetching subscriptions for user: ${userId}`);
-
     const user = await User.findById(userId);
-    
+
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "User not found" 
+        message: "User not found",
       });
     }
 
@@ -365,37 +352,43 @@ export const getUserSubscriptions = async (req: Request, res: Response) => {
 
     // Process individual allowed items
     if (user.allowedItems && user.allowedItems.length > 0) {
-      console.log(`Processing ${user.allowedItems.length} allowed items`);
-      
       for (const allowedItem of user.allowedItems) {
         try {
           const category = await Category.findById(allowedItem.categoryId);
           if (!category) {
-            console.warn(`Category not found for ID: ${allowedItem.categoryId}`);
+            console.warn(
+              `Category not found for ID: ${allowedItem.categoryId}`
+            );
             continue;
           }
 
           // Find the specific item within the category's items array
           const item = category.items?.find(
-            (item: any) => item._id?.toString() === allowedItem.itemId.toString()
+            (item: any) =>
+              item._id?.toString() === allowedItem.itemId.toString()
           );
 
           if (!item) {
-            console.warn(`Item not found for ID: ${allowedItem.itemId} in category: ${category.name}`);
+            console.warn(
+              `Item not found for ID: ${allowedItem.itemId} in category: ${category.name}`
+            );
             continue;
           }
 
           // Convert item to plain object and add metadata
           const itemObject = item.toObject ? item.toObject() : { ...item };
-          
+
           detailedItems.push({
             ...itemObject,
             categoryName: category.name,
             expiredDate: allowedItem.expiredDate,
-            source: 'allowedItem'
+            source: "allowedItem",
           });
         } catch (itemError) {
-          console.error(`Error processing allowed item ${allowedItem.itemId}:`, itemError);
+          console.error(
+            `Error processing allowed item ${allowedItem.itemId}:`,
+            itemError
+          );
           continue;
         }
       }
@@ -403,13 +396,13 @@ export const getUserSubscriptions = async (req: Request, res: Response) => {
 
     // Process allowed categories - get ALL items from these categories
     if (user.allowedCategories && user.allowedCategories.length > 0) {
-      console.log(`Processing ${user.allowedCategories.length} allowed categories`);
-      
       for (const allowedCategory of user.allowedCategories) {
         try {
           const category = await Category.findById(allowedCategory.categoryId);
           if (!category) {
-            console.warn(`Category not found for ID: ${allowedCategory.categoryId}`);
+            console.warn(
+              `Category not found for ID: ${allowedCategory.categoryId}`
+            );
             continue;
           }
 
@@ -417,10 +410,10 @@ export const getUserSubscriptions = async (req: Request, res: Response) => {
           if (category.items && category.items.length > 0) {
             for (const item of category.items) {
               const itemObject = item.toObject ? item.toObject() : { ...item };
-              
+
               // Check if this item is already added from allowedItems to avoid duplicates
               const isDuplicate = detailedItems.some(
-                existingItem => 
+                (existingItem) =>
                   existingItem._id?.toString() === item._id?.toString() &&
                   existingItem.categoryName === category.name
               );
@@ -430,13 +423,16 @@ export const getUserSubscriptions = async (req: Request, res: Response) => {
                   ...itemObject,
                   categoryName: category.name,
                   expiredDate: allowedCategory.expiredDate,
-                  source: 'allowedCategory'
+                  source: "allowedCategory",
                 });
               }
             }
           }
         } catch (categoryError) {
-          console.error(`Error processing allowed category ${allowedCategory.categoryId}:`, categoryError);
+          console.error(
+            `Error processing allowed category ${allowedCategory.categoryId}:`,
+            categoryError
+          );
           continue;
         }
       }
@@ -449,48 +445,19 @@ export const getUserSubscriptions = async (req: Request, res: Response) => {
       return dateB.getTime() - dateA.getTime();
     });
 
-    console.log(`Found ${detailedItems.length} subscription items for user ${userId}`);
-
     res.json({
       success: true,
       allowedItems: detailedItems,
       allowedCategories: user.allowedCategories || [],
       totalItems: detailedItems.length,
       totalCategories: user.allowedCategories?.length || 0,
-      message: detailedItems.length > 0 
-        ? `Found ${detailedItems.length} subscription items` 
-        : 'No subscription items found'
+      message:
+        detailedItems.length > 0
+          ? `Found ${detailedItems.length} subscription items`
+          : "No subscription items found",
     });
-
   } catch (err: any) {
-    console.error('Error in getUserSubscriptions:', err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-    });
-  }
-};
-
-// Alternative version if you want to be more explicit about the user ID source
-export const getUserSubscriptionsByParam = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required",
-      });
-    }
-
-    // Rest of the logic is the same as above...
-    // This version specifically uses req.params.id and doesn't rely on req.user
-  } catch (err: any) {
-    console.error("Error in getUserSubscriptionsByParam:", err);
+    console.error("Error in getUserSubscriptions:", err);
     res.status(500).json({
       success: false,
       message: "Internal server error",

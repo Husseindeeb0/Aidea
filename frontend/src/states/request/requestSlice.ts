@@ -15,6 +15,7 @@ interface RequestsState {
   requests: Request[];
   requestsHistory: RequestHistory[];
   subscriptions: SubscriptionItem[];
+  allowedCategories: any[];
   isLoading: boolean;
   error: string | null;
 }
@@ -23,6 +24,7 @@ const initialState: RequestsState = {
   requests: [],
   requestsHistory: [],
   subscriptions: [],
+  allowedCategories: [],
   isLoading: false,
   error: null,
 };
@@ -132,13 +134,29 @@ const requestsSlice = createSlice({
         state.error = null;
       })
       .addCase(getUserSubscriptionsThunk.fulfilled, (state, action) => {
-        state.subscriptions = action.payload;
         state.isLoading = false;
+
+        // CRITICAL FIX: Extract allowedItems array from the response
+        if (
+          action.payload &&
+          action.payload.success &&
+          Array.isArray(action.payload.allowedItems)
+        ) {
+          state.subscriptions = action.payload.allowedItems; // Extract the array
+        } else if (Array.isArray(action.payload)) {
+          state.subscriptions = action.payload; // Direct array
+        } else {
+          state.subscriptions = []; // Fallback to empty array
+        }
+        state.allowedCategories = action.payload?.allowedCategories || [];
+        state.error = null;
       })
       .addCase(getUserSubscriptionsThunk.rejected, (state, action) => {
         state.isLoading = false;
         state.error =
-          (action.payload as string) || "Failed to check expirations";
+          (action.payload as string) || "Failed to fetch subscriptions";
+        state.subscriptions = []; // Ensure it's always an array
+        state.allowedCategories = [];
       });
   },
 });

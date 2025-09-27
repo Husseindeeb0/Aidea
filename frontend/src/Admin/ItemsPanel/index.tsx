@@ -28,7 +28,6 @@ const ItemsPanel = () => {
         _id?: string;
         items?: any[];
         rank?: number;
-        ranking?: number;
       })[]
     | null
   >(null);
@@ -60,14 +59,16 @@ const ItemsPanel = () => {
             categoryName: cat.name,
             state: it.state,
             price: it.price,
-            ranking: it.rank ?? it.ranking ?? 0,
+            rank: it.rank ?? 0,
             createdAt: it.createdAt,
             _categoryId: catId,
           });
         });
       }
     );
-    return list;
+
+    // ✅ Sort items by rank ascending
+    return list.sort((a, b) => a.rank - b.rank);
   }, [localCategories, categoryData]);
 
   const [showModal, setShowModal] = useState(false);
@@ -79,7 +80,7 @@ const ItemsPanel = () => {
     category: "",
     state: "",
     price: "",
-    ranking: "",
+    rank: "",
   });
 
   const categories = useMemo(() => {
@@ -118,7 +119,7 @@ const ItemsPanel = () => {
           url: formData.url,
           state: formData.state,
           price: parseFloat(formData.price),
-          rank: parseInt(formData.ranking),
+          rank: parseInt(formData.rank),
         };
       }
     } else {
@@ -128,7 +129,7 @@ const ItemsPanel = () => {
         url: formData.url,
         state: formData.state,
         price: parseFloat(formData.price),
-        rank: parseInt(formData.ranking),
+        rank: parseInt(formData.rank),
       });
     }
 
@@ -174,7 +175,7 @@ const ItemsPanel = () => {
       category: "",
       state: "",
       price: "",
-      ranking: "",
+      rank: "",
     });
   };
 
@@ -187,7 +188,7 @@ const ItemsPanel = () => {
       category: item.categoryName,
       state: item.state,
       price: item.price.toString(),
-      ranking: item.ranking.toString(),
+      rank: item.rank.toString(),
     });
     setShowModal(true);
   };
@@ -321,6 +322,11 @@ const ItemsPanel = () => {
           ))}
         </div>
       </div>
+      {items.length === 0 && (
+        <div className="p-8 text-center text-2xl text-gray-400">
+          لا يوجد عناصر
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -341,7 +347,7 @@ const ItemsPanel = () => {
                     category: "",
                     state: "",
                     price: "",
-                    ranking: "",
+                    rank: "",
                   });
                 }}
                 className="text-gray-400 hover:text-white"
@@ -444,9 +450,9 @@ const ItemsPanel = () => {
                   <label className="block text-gray-300 mb-2">الترتيب</label>
                   <input
                     type="number"
-                    value={formData.ranking}
+                    value={formData.rank}
                     onChange={(e) =>
-                      setFormData({ ...formData, ranking: e.target.value })
+                      setFormData({ ...formData, rank: e.target.value })
                     }
                     className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
                     required
@@ -472,7 +478,7 @@ const ItemsPanel = () => {
                       category: "",
                       state: "",
                       price: "",
-                      ranking: "",
+                      rank: "",
                     });
                   }}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-semibold transition-all duration-300"

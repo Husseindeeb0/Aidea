@@ -9,6 +9,7 @@ import {
   checkExpirationAPI,
   getUserSubscriptionsAPI,
 } from "./requestAPI";
+import type { RootState } from "../../store";
 
 export const sendRequestThunk = createAsyncThunk(
   "/requests/send",
@@ -99,9 +100,9 @@ export const rejectRequestThunk = createAsyncThunk(
 
 export const checkEpirationThunk = createAsyncThunk(
   "/requests/checkExpiration",
-  async (_, thunkAPI) => {
+  async (userId: string, thunkAPI) => {
     try {
-      const res = await checkExpirationAPI();
+      const res = await checkExpirationAPI(userId);
       return res.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
@@ -111,12 +112,18 @@ export const checkEpirationThunk = createAsyncThunk(
   }
 );
 
-
 export const getUserSubscriptionsThunk = createAsyncThunk(
   "/requests/getUserSubscriptions",
   async (_, thunkAPI) => {
     try {
-      const res = await getUserSubscriptionsAPI();
+      const state = thunkAPI.getState() as RootState;
+      const userId = state.auth.userData?._id;
+
+      if (!userId) {
+        return thunkAPI.rejectWithValue("User not authenticated");
+      }
+
+      const res = await getUserSubscriptionsAPI(userId);
       return res.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(

@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { getCategoriesThunk } from "../../states/category/categoryThunks";
 import type { Category } from "../../types";
 import CategoriesCard from "../../components/CategoriesCard";
-import { sendRequestThunk } from "../../states/request/requestThunk";
 import ItemsCard from "../../components/ItemsCard";
 
 const HomePage = () => {
@@ -31,14 +30,6 @@ const HomePage = () => {
     rank?: number;
     ranking?: number;
   })[];
-
-  const sendRequest = async (data: {
-    userId: string;
-    categoryName: string;
-    itemName: string;
-  }) => {
-    await dispatch(sendRequestThunk(data)).unwrap();
-  };
 
   const stats = useMemo(() => {
     const numCategories = categories.length;
@@ -69,8 +60,11 @@ const HomePage = () => {
 
   // Filter items based on selected category
   const filteredItems = useMemo(() => {
-    if (!selectedCategoryId) return allItems;
-    return allItems.filter((item) => item.categoryId === selectedCategoryId);
+    const items = !selectedCategoryId
+      ? allItems
+      : allItems.filter((item) => item.categoryId === selectedCategoryId);
+
+    return items.sort((a, b) => a.rank - b.rank);
   }, [allItems, selectedCategoryId]);
 
   const categoryLimit = 6;
@@ -284,7 +278,7 @@ const HomePage = () => {
                 AIDEA
               </span>
             </div>
-            <p className="text-gray-500">© 2024 AIDEA. جميع الحقوق محفوظة</p>
+            <p className="text-gray-500">© 2025 AIDEA. جميع الحقوق محفوظة</p>
           </div>
         </div>
       </footer>
