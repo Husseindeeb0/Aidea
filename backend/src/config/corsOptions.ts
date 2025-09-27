@@ -17,7 +17,8 @@ const corsOptions: CorsOptions = {
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
   optionsSuccessStatus: 200,
-  allowedHeaders: ["Authorization", "Content-Type"],
+  allowedHeaders: ["Authorization", "Content-Type", "Cookie"], // Add Cookie header
+  exposedHeaders: ["Set-Cookie"], // Expose Set-Cookie header
 };
 
 export default corsOptions;
