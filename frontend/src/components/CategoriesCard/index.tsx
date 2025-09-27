@@ -31,7 +31,6 @@ const CategoriesCard = ({
   const itemsCount = (category.items as any[])?.length || 0;
   const availableItems =
     (category.items as any[])?.filter((it) => it.state === "متاح").length || 0;
-  let requestId: string;
 
   // auto-hide notice after 60s
   useEffect(() => {
@@ -40,17 +39,15 @@ const CategoriesCard = ({
     return () => clearTimeout(t);
   }, [showNotice]);
 
-  const checkRequestedCategory = (categoryName: string) => {
-    let found = false;
-    for (let i = 0; i < (userData?.requests?.length || 0); i++) {
-      if (userData.requests[i].categoryName === categoryName) {
-        requestId = userData.requests[i]._id;
-        found = true;
-        break;
-      }
+const checkRequestedCategory = (categoryName: string) => {
+  for (let i = 0; i < (userData?.requests?.length || 0); i++) {
+    const req = userData.requests[i];
+    if (req.categoryName === categoryName) {
+      return { found: true, requestId: req._id };
     }
-    return found;
-  };
+  }
+  return { found: false, requestId: null };
+};
 
   // Check both Redux state and local state
   const isRequestedFromRedux = checkRequestedCategory(category.name);
