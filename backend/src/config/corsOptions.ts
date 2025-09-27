@@ -2,6 +2,7 @@ import { CorsOptions } from "cors";
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://aidea-frontend.onrender.com",
 ];
 
 const corsOptions: CorsOptions = {
