@@ -23,7 +23,7 @@ app.use(express.json());
 if (!process.env.MONGO_URI) {
   throw new Error("MONGO_URI is not defined in .env");
 }
-console.log("mongoURI: ", process.env.MONGO_URI)
+console.log("mongoURI: ", process.env.MONGO_URI);
 
 // Session middleware (needed if using Passport sessions)
 app.use(
@@ -34,8 +34,8 @@ app.use(
     store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
     cookie: {
       httpOnly: true,
-      secure: false, // set true if using https
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   })
