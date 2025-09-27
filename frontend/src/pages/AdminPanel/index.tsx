@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Package, Users, Settings, List, History } from "lucide-react";
 import CategoriesPanel from "../../Admin/CategoriesPanel";
 import ItemsPanel from "../../Admin/ItemsPanel";
