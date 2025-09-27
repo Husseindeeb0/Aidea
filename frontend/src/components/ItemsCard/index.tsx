@@ -18,7 +18,6 @@ const ItemsCard = ({ item }: ItemsCardProps) => {
   const { userData } = useSelector((state: RootState) => state.auth);
   const [showNotice, setShowNotice] = useState(false);
   const [localIsRequested, setLocalIsRequested] = useState(false); // Local state to track request status
-  let requestId: string;
 
   useEffect(() => {
     if (!showNotice) return;
@@ -28,16 +27,13 @@ const ItemsCard = ({ item }: ItemsCardProps) => {
 
   // Check if this item already has a request
   const checkRequestedItem = (categoryName: string, itemName: string) => {
-    let found = false;
     for (let i = 0; i < (userData?.requests?.length || 0); i++) {
       const req = userData.requests[i];
       if (req.categoryName === categoryName && req.itemName === itemName) {
-        requestId = req._id;
-        found = true;
-        break;
+        return { found: true, requestId: req._id };
       }
     }
-    return found;
+    return { found: false, requestId: null };
   };
 
   // Check both Redux state and local state
