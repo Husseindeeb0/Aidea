@@ -37,7 +37,7 @@ app.use(
       // secure: process.env.NODE_ENV === "production",
       secure: true,
       // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      sameSite: "none",
+      sameSite: "none" as const,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   })
